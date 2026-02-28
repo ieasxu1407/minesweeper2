@@ -1,0 +1,28 @@
+body {
+  text-align: center;
+  font-family: Arial;
+}
+
+#board {
+  margin: 20px auto;
+  display: grid;
+  gap: 2px;
+}
+
+.cell {
+  width: 30px;
+  height: 30px;
+  background: #ccc;
+  border: 1px solid #999;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.revealed {
+  background: #eee;
+  cursor: default;
+}
+
+.mine {
+  background: red;
+}
