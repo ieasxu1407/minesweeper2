@@ -7,7 +7,8 @@ let devMode = false;
 let timer = 0;
 let interval = null;
 let isLoggedIn = false;
-let allowedDevUser = "ieasxu1407"; // ← 여기 수정
+let clientId = "Iv23liOaal9kcve7zqjP"; //
+let allowedUser = "ieasxu1407"; //
 
 // =====================
 // 게임 시작
@@ -196,3 +197,4 @@ function updateDevView() {
 
 // =====================
 window.onload = startGame;
+
