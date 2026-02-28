@@ -195,9 +195,6 @@ function updateDevView() {
   }
 }
 
-// =====================
-window.onload = startGame;
-
 
 function sendMessage() {
   let text = document.getElementById("chatInput").value;
@@ -215,7 +212,6 @@ function sendMessage() {
   document.getElementById("chatInput").value = "";
 }
 
-
 function listenChat() {
   db.collection("rooms")
     .doc(roomId)
@@ -230,5 +226,12 @@ function listenChat() {
       });
     });
 }
+
+// =====================
+window.onload = startGame;
+
+
+
+
 
 
