@@ -1,0 +1,55 @@
+body {
+  background: #0f172a;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.top-bar {
+  margin: 20px;
+}
+
+input {
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: gray;
+  cursor: not-allowed;
+}
+
+#board {
+  display: grid;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.cell {
+  width: 35px;
+  height: 35px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cell.revealed {
+  background: #475569;
+}
+
+.dev-active .cell.mine:not(.revealed) {
+  background: #ff4d6d !important;
+}
