@@ -1,6 +1,7 @@
 // =====================
 // 기본 설정
 // =====================
+let adminEmail = "ieasxu1407@naver.com";
 let rows = 8, cols = 8, mines = 10;
 let board = [];
 let devMode = false;
@@ -229,6 +230,7 @@ function listenChat() {
 
 // =====================
 window.onload = startGame;
+
 
 
 
