@@ -1,3 +1,14 @@
+// ===== SHA-256 함수와 관리자 해시 =====
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 관리자 비밀번호 해시 (원래 비밀번호: admin123)
+const adminHash = "ef92b778bafe771e89245b89ecbc9b2e5b0d0a2e3d0e1f843e2e76f9d6b5f0d1"; 
+
 let board = [];
 let rows, cols, mines;
 let devMode = false;
