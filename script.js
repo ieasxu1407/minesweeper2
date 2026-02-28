@@ -109,26 +109,40 @@ function revealAllMines() {
   });
 }
 
-function toggleDevMode() {
-  devMode = !devMode;
-  alert(devMode ? "개발자모드 ON" : "개발자모드 OFF");
+async function toggleDevMode() {
+    const input = prompt("개발자 모드 비밀번호 입력:");
 
-  if (devMode) {
-    revealAllMines();
-  } else {
-    document.querySelectorAll(".cell").forEach(cell => {
-      if (!board[cell.dataset.row][cell.dataset.col].open) {
-        cell.innerText = "";
-        cell.classList.remove("mine");
-      }
-    });
-  }
+    if (!input) return;
+
+    const inputHash = await sha256(input);
+
+    if (inputHash === adminHash) {
+        devMode = !devMode;
+        alert(devMode ? "개발자모드 ON" : "개발자모드 OFF");
+
+        if (devMode) {
+            // 지뢰 모두 표시
+            document.querySelectorAll(".cell").forEach(cell => {
+                const r = cell.dataset.row;
+                const c = cell.dataset.col;
+                if (board[r][c].mine) cell.innerText = "💣";
+            });
+        } else {
+            // 지뢰 숨기기
+            document.querySelectorAll(".cell").forEach(cell => {
+                const r = cell.dataset.row;
+                const c = cell.dataset.col;
+                if (!board[r][c].open) cell.innerText = "";
+            });
+        }
+    } else {
+        alert("❌ 비밀번호 틀림");
+    }
 }
-
 function adminCheat() {
   const password = prompt("관리자 비밀번호 입력:");
 
-  if (password === "admin123") {
+  if (password === "admin") {
     alert("🔥 관리자 승리!");
     document.querySelectorAll(".cell").forEach(cell => {
       if (!board[cell.dataset.row][cell.dataset.col].mine) {
