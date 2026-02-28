@@ -1,155 +1,98 @@
-// ===== SHA-256 함수와 관리자 해시 =====
-async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// ⚠️ 난독화 + SHA-256 비밀번호 검증
+(async()=>{
+
+let a=[],b,c,d=!1;
+
+const e="ef92b778bafe771e89245b89ecbc9b2e5b0d0a2e3d0e1f843e2e76f9d6b5f0d1";
+
+async function f(g){const h=new TextEncoder().encode(g),i=await crypto.subtle.digest("SHA-256",h),j=Array.from(new Uint8Array(i));return j.map(k=>k.toString(16).padStart(2,"0")).join("")}
+
+window.startGame=function(){
+    const l=document.getElementById("difficulty").value;
+    if(l==="easy"){b=9;c=9;d=10;}
+    else if(l==="medium"){b=16;c=16;d=40;}
+    else{b=24;c=24;d=99;}
+    createBoard();
 }
 
-// 관리자 비밀번호 해시 (원래 비밀번호: admin123)
-const adminHash = "ef92b778bafe771e89245b89ecbc9b2e5b0d0a2e3d0e1f843e2e76f9d6b5f0d1"; 
-
-let board = [];
-let rows, cols, mines;
-let devMode = false;
-
-function startGame() {
-  const diff = document.getElementById("difficulty").value;
-
-  if (diff === "easy") {
-    rows = 9; cols = 9; mines = 10;
-  } else if (diff === "medium") {
-    rows = 16; cols = 16; mines = 40;
-  } else {
-    rows = 24; cols = 24; mines = 99;
-  }
-
-  createBoard();
-}
-
-function createBoard() {
-  const boardDiv = document.getElementById("board");
-  boardDiv.innerHTML = "";
-  boardDiv.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
-
-  board = [];
-
-  for (let r = 0; r < rows; r++) {
-    board[r] = [];
-    for (let c = 0; c < cols; c++) {
-      board[r][c] = { mine: false, open: false };
-
-      const cell = document.createElement("div");
-      cell.classList.add("cell");
-      cell.dataset.row = r;
-      cell.dataset.col = c;
-
-      cell.onclick = () => openCell(r, c);
-
-      boardDiv.appendChild(cell);
-    }
-  }
-
-  placeMines();
-}
-
-function placeMines() {
-  let placed = 0;
-  while (placed < mines) {
-    let r = Math.floor(Math.random() * rows);
-    let c = Math.floor(Math.random() * cols);
-
-    if (!board[r][c].mine) {
-      board[r][c].mine = true;
-      placed++;
-    }
-  }
-}
-
-function openCell(r, c) {
-  const cell = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
-  if (board[r][c].open) return;
-
-  board[r][c].open = true;
-  cell.classList.add("open");
-
-  if (board[r][c].mine) {
-    cell.classList.add("mine");
-    cell.innerText = "💣";
-    alert("💥 게임 오버!");
-    revealAllMines();
-  } else {
-    const count = countMines(r, c);
-    if (count > 0) cell.innerText = count;
-  }
-}
-
-function countMines(r, c) {
-  let count = 0;
-  for (let i = -1; i <= 1; i++) {
-    for (let j = -1; j <= 1; j++) {
-      let nr = r + i;
-      let nc = c + j;
-      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-        if (board[nr][nc].mine) count++;
-      }
-    }
-  }
-  return count;
-}
-
-function revealAllMines() {
-  document.querySelectorAll(".cell").forEach(cell => {
-    const r = cell.dataset.row;
-    const c = cell.dataset.col;
-    if (board[r][c].mine) {
-      cell.innerText = "💣";
-      cell.classList.add("mine");
-    }
-  });
-}
-
-async function toggleDevMode() {
-    const input = prompt("개발자 모드 비밀번호 입력:");
-
-    if (!input) return;
-
-    const inputHash = await sha256(input);
-
-    if (inputHash === adminHash) {
-        devMode = !devMode;
-        alert(devMode ? "개발자모드 ON" : "개발자모드 OFF");
-
-        if (devMode) {
-            // 지뢰 모두 표시
-            document.querySelectorAll(".cell").forEach(cell => {
-                const r = cell.dataset.row;
-                const c = cell.dataset.col;
-                if (board[r][c].mine) cell.innerText = "💣";
-            });
-        } else {
-            // 지뢰 숨기기
-            document.querySelectorAll(".cell").forEach(cell => {
-                const r = cell.dataset.row;
-                const c = cell.dataset.col;
-                if (!board[r][c].open) cell.innerText = "";
-            });
+function createBoard(){
+    const m=document.getElementById("board");
+    m.innerHTML="";
+    m.style.gridTemplateColumns=`repeat(${c},30px)`;
+    a=[];
+    for(let n=0;n<b;n++){
+        a[n]=[];
+        for(let o=0;o<c;o++){
+            a[n][o]={mine:!1,open:!1};
+            const p=document.createElement("div");
+            p.classList.add("cell");
+            p.dataset.row=n;
+            p.dataset.col=o;
+            p.onclick=(()=>openCell(n,o));
+            m.appendChild(p);
         }
-    } else {
-        alert("❌ 비밀번호 틀림");
+    }
+    placeMines();
+}
+
+function placeMines(){
+    let q=0;
+    while(q<d){
+        let r=Math.floor(Math.random()*b),s=Math.floor(Math.random()*c);
+        if(!a[r][s].mine){a[r][s].mine=!0;q++;}
     }
 }
-function adminCheat() {
-  const password = prompt("관리자 비밀번호 입력:");
 
-  if (password === "admin") {
-    alert("🔥 관리자 승리!");
-    document.querySelectorAll(".cell").forEach(cell => {
-      if (!board[cell.dataset.row][cell.dataset.col].mine) {
-        cell.classList.add("open");
-      }
-    });
-  } else {
-    alert("❌ 비밀번호 틀림");
-  }
+function openCell(r,s){
+    const t=document.querySelector(`[data-row='${r}'][data-col='${s}']`);
+    if(a[r][s].open)return;
+    a[r][s].open=!0;
+    t.classList.add("open");
+    if(a[r][s].mine){t.classList.add("mine");t.innerText="💣";alert("💥 게임 오버!");revealAllMines();}
+    else{const u=countMines(r,s);if(u>0)t.innerText=u;}
 }
+
+function countMines(r,s){
+    let v=0;
+    for(let w=-1;w<=1;w++){
+        for(let x=-1;x<=1;x++){
+            let y=r+w,z=s+x;
+            if(y>=0&&y<b&&z>=0&&z<c){if(a[y][z].mine)v++;}
+        }
+    }
+    return v;
+}
+
+function revealAllMines(){
+    document.querySelectorAll(".cell").forEach(u=>{
+        const r=u.dataset.row,s=u.dataset.col;
+        if(a[r][s].mine){u.innerText="💣";u.classList.add("mine");}
+    });
+}
+
+window.toggleDevMode=async function(){
+    const input=prompt("개발자 모드 비밀번호 입력:");
+    if(!input)return;
+    const inputHash=await f(input);
+    if(inputHash===e){
+        d=!d;
+        alert(d?"개발자모드 ON":"개발자모드 OFF");
+        if(d){document.querySelectorAll(".cell").forEach(u=>{const r=u.dataset.row,s=u.dataset.col;if(a[r][s].mine)u.innerText="💣";});}
+        else{document.querySelectorAll(".cell").forEach(u=>{const r=u.dataset.row,s=u.dataset.col;if(!a[r][s].open)u.innerText="";});}
+    }else{alert("❌ 비밀번호 틀림");}
+}
+
+window.adminCheat=async function(){
+    const input=prompt("관리자 비밀번호 입력:");
+    if(!input)return;
+    const inputHash=await f(input);
+    if(inputHash===e){
+        alert("🔥 관리자 승리!");
+        document.querySelectorAll(".cell").forEach(u=>{
+            const r=u.dataset.row,s=u.dataset.col;
+            if(!a[r][s].mine)u.classList.add("open");
+        });
+    }else{alert("❌ 비밀번호 틀림");}
+}
+
+})();
