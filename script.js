@@ -198,3 +198,37 @@ function updateDevView() {
 // =====================
 window.onload = startGame;
 
+
+function sendMessage() {
+  let text = document.getElementById("chatInput").value;
+  if (!text) return;
+
+  db.collection("rooms")
+    .doc(roomId)
+    .collection("chat")
+    .add({
+      user: currentUser.email,
+      text: text,
+      time: Date.now()
+    });
+
+  document.getElementById("chatInput").value = "";
+}
+
+
+function listenChat() {
+  db.collection("rooms")
+    .doc(roomId)
+    .collection("chat")
+    .orderBy("time")
+    .onSnapshot(snapshot => {
+      const messages = document.getElementById("messages");
+      messages.innerHTML = "";
+      snapshot.forEach(doc => {
+        let data = doc.data();
+        messages.innerHTML += `<div><b>${data.user}</b>: ${data.text}</div>`;
+      });
+    });
+}
+
+
