@@ -7,6 +7,7 @@ const e="ef92b778bafe771e89245b89ecbc9b2e5b0d0a2e3d0e1f843e2e76f9d6b5f0d1";
 
 async function f(g){const h=new TextEncoder().encode(g),i=await crypto.subtle.digest("SHA-256",h),j=Array.from(new Uint8Array(i));return j.map(k=>k.toString(16).padStart(2,"0")).join("")}
 
+sha256("admin").then(console.log);    
 window.startGame=function(){
     const l=document.getElementById("difficulty").value;
     if(l==="easy"){b=9;c=9;d=10;}
