@@ -84,14 +84,41 @@ const OWNER = "ieasxu1407";
 let isDev = false;
 let board = [];
 
-function login(){
-    let id = document.getElementById("githubId").value;
-    if(id === OWNER){
-        isDev = true;
-        document.getElementById("devPanel").style.display="block";
-        alert("제작자 모드 활성화!");
-    } else {
-        alert("일반 사용자");
+async function login(){
+    const token = document.getElementById("token").value;
+
+    if(!token){
+        alert("토큰 입력 필요");
+        return;
+    }
+
+    try{
+        const res = await fetch("https://api.github.com/user", {
+            headers: {
+                "Authorization": "token " + token
+            }
+        });
+
+        if(!res.ok){
+            throw new Error("인증 실패");
+        }
+
+        const data = await res.json();
+
+        console.log("로그인 계정:", data.login);
+
+        if(data.login === OWNER){
+            isDev = true;
+            document.getElementById("devPanel").style.display="block";
+            localStorage.setItem("gh_token", token);
+            alert("✅ 제작자 인증 완료");
+        } else {
+            alert("일반 사용자: " + data.login);
+        }
+
+    }catch(e){
+        alert("❌ 로그인 실패");
+        console.error(e);
     }
 }
 
