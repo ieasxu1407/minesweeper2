@@ -1,28 +1,163 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>지뢰찾기 Ultimate</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>지뢰찾기 제작자모드</title>
+<style>
+body{
+    margin:0;
+    font-family:sans-serif;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+}
+h1{margin:10px;}
+
+#loginBox{
+    margin:10px;
+}
+
+input{
+    padding:8px;
+    border-radius:10px;
+    border:none;
+}
+
+button{
+    padding:8px 12px;
+    border:none;
+    border-radius:10px;
+    background:#22c55e;
+    color:white;
+    cursor:pointer;
+}
+
+#game{
+    display:grid;
+    grid-template-columns: repeat(10, 35px);
+    justify-content:center;
+    margin-top:20px;
+}
+
+.cell{
+    width:35px;
+    height:35px;
+    background:#1e293b;
+    border:1px solid #334155;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+}
+
+.cell.open{background:#64748b;}
+.mine{background:red;}
+
+.dev{
+    margin-top:10px;
+}
+</style>
 </head>
 <body>
 
-<h1>💣 지뢰찾기 Ultimate</h1>
+<h1>💣 지뢰찾기 (제작자모드)</h1>
 
-<div class="controls">
-  <select id="difficulty">
-    <option value="easy">쉬움 (9x9)</option>
-    <option value="medium">보통 (16x16)</option>
-    <option value="hard">어려움 (24x24)</option>
-  </select>
-
-  <button onclick="startGame()">게임 시작</button>
-  <button onclick="toggleDevMode()">👨‍💻 개발자모드</button>
-  <button onclick="adminCheat()">🔥 관리자 치트</button>
+<div id="loginBox">
+    <input id="githubId" placeholder="GitHub ID 입력">
+    <button onclick="login()">로그인</button>
 </div>
 
-<div id="board"></div>
+<div class="dev" id="devPanel" style="display:none;">
+    <button onclick="showMines()">지뢰 보기</button>
+    <button onclick="winGame()">자동 승리</button>
+</div>
 
-<script src="script.js"></script>
+<div id="game"></div>
+
+<script>
+const SIZE = 10;
+const MINES = 15;
+
+// 🔐 제작자 ID (여기 수정하면됨)
+const OWNER = "ieasxu1407";
+
+let isDev = false;
+let board = [];
+
+function login(){
+    let id = document.getElementById("githubId").value;
+    if(id === OWNER){
+        isDev = true;
+        document.getElementById("devPanel").style.display="block";
+        alert("제작자 모드 활성화!");
+    } else {
+        alert("일반 사용자");
+    }
+}
+
+function init(){
+    const game = document.getElementById("game");
+    game.innerHTML="";
+    board=[];
+
+    for(let y=0;y<SIZE;y++){
+        let row=[];
+        for(let x=0;x<SIZE;x++){
+            let cell=document.createElement("div");
+            cell.className="cell";
+            cell.onclick=()=>openCell(x,y);
+            game.appendChild(cell);
+
+            row.push({mine:false, open:false, el:cell});
+        }
+        board.push(row);
+    }
+
+    // 지뢰 배치
+    let placed=0;
+    while(placed<MINES){
+        let x=Math.floor(Math.random()*SIZE);
+        let y=Math.floor(Math.random()*SIZE);
+        if(!board[y][x].mine){
+            board[y][x].mine=true;
+            placed++;
+        }
+    }
+}
+
+function openCell(x,y){
+    let cell=board[y][x];
+    if(cell.open) return;
+
+    cell.open=true;
+    cell.el.classList.add("open");
+
+    if(cell.mine){
+        cell.el.classList.add("mine");
+        alert("💥 게임오버");
+        init();
+    }
+}
+
+function showMines(){
+    if(!isDev) return;
+    board.forEach(row=>{
+        row.forEach(c=>{
+            if(c.mine){
+                c.el.style.background="yellow";
+            }
+        })
+    });
+}
+
+function winGame(){
+    if(!isDev) return;
+    alert("🎉 자동 승리!");
+    init();
+}
+
+init();
+</script>
+
 </body>
 </html>
