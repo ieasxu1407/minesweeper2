@@ -3,187 +3,256 @@
 <head>
 <meta charset="UTF-8">
 <title>지뢰찾기</title>
+
 <style>
-body{
-    margin:0;
-    font-family:sans-serif;
-    background:#0f172a;
-    color:white;
-    text-align:center;
-}
-h1{margin:10px;}
+body { font-family:sans-serif; text-align:center; }
+#game { display:grid; margin:20px auto; }
 
-#loginBox{
-    margin:10px;
+.cell {
+  width:30px; height:30px;
+  border:1px solid #ccc;
+  line-height:30px;
+  cursor:pointer;
+  user-select:none;
 }
 
-input{
-    padding:8px;
-    border-radius:10px;
-    border:none;
-}
+.reveal { background:#eee; }
+.mine { background:red; }
 
-button{
-    padding:8px 12px;
-    border:none;
-    border-radius:10px;
-    background:#22c55e;
-    color:white;
-    cursor:pointer;
-}
+.flag { background:orange; }
 
-#game{
-    display:grid;
-    grid-template-columns: repeat(10, 35px);
-    justify-content:center;
-    margin-top:20px;
-}
-
-.cell{
-    width:35px;
-    height:35px;
-    background:#1e293b;
-    border:1px solid #334155;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-}
-
-.cell.open{background:#64748b;}
-.mine{background:red;}
-
-.dev{
-    margin-top:10px;
+#panel {
+  position:fixed;
+  right:10px; top:10px;
+  background:#fff;
+  border:1px solid #000;
+  padding:10px;
+  display:none;
 }
 </style>
 </head>
+
 <body>
 
 <h1>💣 지뢰찾기</h1>
 
-<div id="loginBox">
-    <input id="token" placeholder="github 제작자 로그인">
-    <button onclick="login()">GitHub 로그인</button>
+<div>
+난이도:
+<select id="difficulty">
+<option value="easy">쉬움</option>
+<option value="normal">보통</option>
+<option value="hard">어려움</option>
+</select>
+
+시간:
+<input type="number" id="timeInput" value="60">초
+
+<button onclick="startGame()">시작</button>
 </div>
 
-<div class="dev" id="devPanel" style="display:none;">
-    <button onclick="showMines()">지뢰 보기</button>
-    <button onclick="winGame()">자동 승리</button>
-</div>
+<div>⏱ <span id="time">0</span></div>
 
 <div id="game"></div>
 
+<button onclick="enterDev()">⚙ 제작자 모드</button>
+
+<div id="panel">
+<h3>제작자 모드</h3>
+<button onclick="showMines()">지뢰 보기</button>
+<button onclick="shareResult()">결과 공유</button>
+<button onclick="exitDev()">나가기</button>
+</div>
+
 <script>
-const SIZE = 10;
-const MINES = 15;
 
-// 🔐 제작자 ID (여기 수정하면됨)
-const OWNER = "ieasxu1407";
+// 난이도
+const DIFF = {
+  easy:{w:8,h:8,m:10},
+  normal:{w:12,h:12,m:20},
+  hard:{w:16,h:16,m:40}
+};
 
-let isDev = false;
-let board = [];
+let board=[];
+let timer;
+let timeLeft=0;
+let width,height;
 
-async function login(){
-    const token = document.getElementById("token").value;
+// ===== 게임 시작 =====
+function startGame(){
+  const diff = DIFF[difficulty.value];
+  width = diff.w;
+  height = diff.h;
 
-    if(!token){
-        alert("토큰 입력 필요");
-        return;
-    }
+  timeLeft = parseInt(timeInput.value);
 
-    try{
-        const res = await fetch("https://api.github.com/user", {
-            headers: {
-                "Authorization": "token " + token
-            }
-        });
+  game.innerHTML="";
+  game.style.gridTemplateColumns=`repeat(${width},30px)`;
 
-        if(!res.ok){
-            throw new Error("인증 실패");
-        }
+  board=[];
 
-        const data = await res.json();
+  for(let i=0;i<width*height;i++){
+    let cell=document.createElement("div");
+    cell.className="cell";
+    cell.dataset.mine="false";
+    cell.dataset.flag="false";
 
-        console.log("로그인 계정:", data.login);
+    cell.oncontextmenu=(e)=>{
+      e.preventDefault();
+      toggleFlag(cell);
+    };
 
-        if(data.login === OWNER){
-            isDev = true;
-            document.getElementById("devPanel").style.display="block";
-            localStorage.setItem("gh_token", token);
-            alert("✅ 제작자 인증 완료");
-        } else {
-            alert("일반 사용자: " + data.login);
-        }
+    cell.onclick=()=>clickCell(cell,i);
 
-    }catch(e){
-        alert("❌ 로그인 실패");
-        console.error(e);
-    }
+    game.appendChild(cell);
+    board.push(cell);
+  }
+
+  // 지뢰
+  for(let i=0;i<diff.m;i++){
+    let r=Math.floor(Math.random()*board.length);
+    board[r].dataset.mine="true";
+  }
+
+  startTimer();
 }
 
-function init(){
-    const game = document.getElementById("game");
-    game.innerHTML="";
-    board=[];
+// ===== 클릭 =====
+function clickCell(cell,i){
+  if(cell.classList.contains("reveal") || cell.dataset.flag==="true") return;
 
-    for(let y=0;y<SIZE;y++){
-        let row=[];
-        for(let x=0;x<SIZE;x++){
-            let cell=document.createElement("div");
-            cell.className="cell";
-            cell.onclick=()=>openCell(x,y);
-            game.appendChild(cell);
+  if(cell.dataset.mine==="true"){
+    cell.classList.add("mine");
+    alert("💥 게임오버");
+    clearInterval(timer);
+    return;
+  }
 
-            row.push({mine:false, open:false, el:cell});
-        }
-        board.push(row);
-    }
-
-    // 지뢰 배치
-    let placed=0;
-    while(placed<MINES){
-        let x=Math.floor(Math.random()*SIZE);
-        let y=Math.floor(Math.random()*SIZE);
-        if(!board[y][x].mine){
-            board[y][x].mine=true;
-            placed++;
-        }
-    }
+  reveal(i);
 }
 
-function openCell(x,y){
-    let cell=board[y][x];
-    if(cell.open) return;
+// ===== 숫자 계산 =====
+function countMines(i){
+  let x=i%width;
+  let y=Math.floor(i/width);
+  let count=0;
 
-    cell.open=true;
-    cell.el.classList.add("open");
+  for(let dy=-1;dy<=1;dy++){
+    for(let dx=-1;dx<=1;dx++){
+      let nx=x+dx, ny=y+dy;
+      let ni=ny*width+nx;
 
-    if(cell.mine){
-        cell.el.classList.add("mine");
-        alert("💥 게임오버");
-        init();
+      if(nx>=0 && ny>=0 && nx<width && ny<height){
+        if(board[ni].dataset.mine==="true") count++;
+      }
     }
+  }
+  return count;
 }
 
-function showMines(){
-    if(!isDev) return;
-    board.forEach(row=>{
-        row.forEach(c=>{
-            if(c.mine){
-                c.el.style.background="yellow";
-            }
-        })
+// ===== 펼치기 =====
+function reveal(i){
+  let cell=board[i];
+  if(cell.classList.contains("reveal")) return;
+
+  cell.classList.add("reveal");
+
+  let count=countMines(i);
+  if(count>0){
+    cell.innerText=count;
+  } else {
+    let x=i%width;
+    let y=Math.floor(i/width);
+
+    for(let dy=-1;dy<=1;dy++){
+      for(let dx=-1;dx<=1;dx++){
+        let nx=x+dx, ny=y+dy;
+        let ni=ny*width+nx;
+
+        if(nx>=0 && ny>=0 && nx<width && ny<height){
+          reveal(ni);
+        }
+      }
+    }
+  }
+}
+
+// ===== 깃발 =====
+function toggleFlag(cell){
+  if(cell.classList.contains("reveal")) return;
+
+  if(cell.dataset.flag==="true"){
+    cell.dataset.flag="false";
+    cell.classList.remove("flag");
+    cell.innerText="";
+  } else {
+    cell.dataset.flag="true";
+    cell.classList.add("flag");
+    cell.innerText="🚩";
+  }
+}
+
+// ===== 타이머 =====
+function startTimer(){
+  clearInterval(timer);
+
+  time.innerText=timeLeft;
+
+  timer=setInterval(()=>{
+    timeLeft--;
+    time.innerText=timeLeft;
+
+    if(timeLeft<=0){
+      clearInterval(timer);
+      alert("⏰ 시간초과");
+    }
+  },1000);
+}
+
+// ===== 제작자 모드 (GitHub 토큰 인증) =====
+async function enterDev(){
+  const token = prompt("GitHub 토큰 입력");
+
+  try {
+    const res = await fetch("https://api.github.com/user", {
+      headers: {
+        Authorization: "token " + token
+      }
     });
+
+    if(res.status === 200){
+      panel.style.display="block";
+      alert("✅ 인증 성공");
+    } else {
+      alert("❌ 토큰 오류");
+    }
+
+  } catch(e){
+    alert("오류 발생");
+  }
 }
 
-function winGame(){
-    if(!isDev) return;
-    alert("🎉 자동 승리!");
-    init();
+function exitDev(){
+  panel.style.display="none";
 }
 
-init();
+// ===== 지뢰 보기 =====
+function showMines(){
+  board.forEach(c=>{
+    if(c.dataset.mine==="true"){
+      c.style.background="yellow";
+    }
+  });
+}
+
+// ===== 결과 공유 =====
+function shareResult(){
+  const result = `남은시간:${timeLeft}`;
+  const url = location.href.split("?")[0] + "?r=" + encodeURIComponent(result);
+
+  navigator.clipboard.writeText(url);
+  alert("🔗 복사됨\n"+url);
+}
+
 </script>
 
 </body>
